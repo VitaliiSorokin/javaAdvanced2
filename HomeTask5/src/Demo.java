@@ -9,7 +9,7 @@ public class Demo {
         while (true) {
             System.out.println("Please input the text or type <quit>");
             String input = scanner.nextLine();
-            inputChecker.setCurrentInput(input);
+            inputChecker.addString(input);
             if (input.equals("quit")) {
                 break;
             }

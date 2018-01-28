@@ -5,25 +5,28 @@ import java.nio.file.Paths;
 public class InputChecker implements Runnable {
     private String previousInput = "";
     private String currentInput = "";
+    private String newString = "";
     private boolean running = true;
+    private StringBuilder sb = new StringBuilder();
 
     private void terminate() {
         running = false;
     }
 
-    public void setCurrentInput(String input) {
-        previousInput = this.currentInput;
-        this.currentInput = input;
+    public void addString(String s) {
+        sb.append(s).append(System.lineSeparator());
+        newString = s;
     }
 
     @Override
     public void run() {
         while (running) {
+            currentInput = sb.toString();
             try {
                 if (!currentInput.equals(previousInput)) {
                     write2file();
                 }
-                if (currentInput.equals("quit")) {
+                if (newString.equals("quit")) {
                     terminate();
                 } else {
                     Thread.sleep(1000);
@@ -37,6 +40,7 @@ public class InputChecker implements Runnable {
     private void write2file() {
         try {
             Files.write(Paths.get("output.txt"), currentInput.getBytes());
+            previousInput = currentInput;
         } catch (IOException e) {
             e.printStackTrace();
         }
