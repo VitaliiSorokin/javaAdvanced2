@@ -27,8 +27,8 @@ public class DBUtils {
             statement.execute("DROP TABLE `school`");
             statement.execute("CREATE TABLE IF NOT EXISTS school" +
                     "  (id INT NOT NULL AUTO_INCREMENT," +
-                    "  className VARCHAR(3) NOT NULL," +
-                    "  pupilsCount INT(3) DEFAULT NULL," +
+                    "  class_name VARCHAR(3) NOT NULL," +
+                    "  pupils_count INT(3) DEFAULT NULL," +
                     "  principal VARCHAR(255) DEFAULT NULL," +
                     "  PRIMARY KEY (id)" +
                     " )"
@@ -39,7 +39,7 @@ public class DBUtils {
     }
 
     public static void addRow(String[] values) {
-        final String addSttmnt = "INSERT INTO school (className, pupilsCount, principal) VALUES (?, ?, ?)";
+        final String addSttmnt = "INSERT INTO school (class_name, pupils_count, principal) VALUES (?, ?, ?)";
         try (Connection dbConnection = getConnection();
              PreparedStatement statement = dbConnection.prepareStatement(addSttmnt)) {
             statement.setString(1, values[0]);
@@ -52,7 +52,7 @@ public class DBUtils {
     }
 
     public static String getClassInfo(String className) {
-        final String getSttmnt = "SELECT className, pupilsCount, principal FROM school WHERE className LIKE  ?";
+        final String getSttmnt = "SELECT class_name, pupils_count, principal FROM school WHERE class_name LIKE  ?";
         String classNam = null;
         String classNum = null;
         String classPrinc = null;
@@ -62,8 +62,8 @@ public class DBUtils {
             statement.setString(1, className);
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
-                classNam = rs.getString("className");
-                classNum = rs.getString("pupilsCount");
+                classNam = rs.getString("class_name");
+                classNum = rs.getString("pupils_count");
                 classPrinc = rs.getString("principal");
             }
         } catch (SQLException e) {

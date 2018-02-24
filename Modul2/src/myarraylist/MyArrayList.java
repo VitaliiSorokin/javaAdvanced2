@@ -4,7 +4,7 @@ public class MyArrayList<E> {
     private E[] a;
     private int curSize;
 
-    public MyArrayList() {
+    MyArrayList() {
         a = (E[]) new Object[10];
     }
 
@@ -19,11 +19,9 @@ public class MyArrayList<E> {
 
     public void add(E elem, int index) {
         if (index > a.length) {
-            reSize(a.length * 2 + 1);
+            resize(a.length * 2 + 1);
         }
-        for (int i = curSize - 1; i > index; i--) {
-            a[i] = a[i - 1];
-        }
+        System.arraycopy(a, index, a, index + 1, curSize - 1 - index);
 
         a[index] = elem;
         curSize++;
@@ -36,19 +34,15 @@ public class MyArrayList<E> {
     public E remove(int index) {
         E removedElem = get(index);
 
-        for (int i = index; i < curSize - 1; i++) {
-            a[i] = a[i + 1];
-        }
+        System.arraycopy(a, index + 1, a, index, curSize - 1 - index);
         curSize--;
 
         return removedElem;
     }
 
-    private void reSize(int newSize) {
+    private void resize(int newSize) {
         E[] old = a;
         a = (E[]) new Object[newSize];
-        for (int i = 0; i < curSize; i++) {
-            a[i] = old[i];
-        }
+        System.arraycopy(old, 0, a, 0, curSize);
     }
 }
