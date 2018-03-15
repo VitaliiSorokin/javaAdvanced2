@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iTODOList</title>
+</head>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+<style>
+    body {
+        margin: 0;
+        min-width: 250px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    ul li {
+        cursor: pointer;
+        position: relative;
+        padding: 12px 8px 12px 40px;
+        list-style-type: none;
+        background: #eee;
+        font-size: 18px;
+        transition: 0.2s;
+
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    ul li:nth-child(odd) {
+        background: #f9f9f9;
+    }
+
+    ul li:hover {
+        background: #ddd;
+    }
+
+    .header {
+        background-color: #f44336;
+        padding: 30px 40px;
+        color: white;
+        text-align: center;
+    }
+
+    .header:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    input {
+        border: none;
+        width: 75%;
+        padding: 10px;
+        float: left;
+        font-size: 16px;
+    }
+
+    .addBtn {
+        padding: 10px;
+        width: 25%;
+        background: #d9d9d9;
+        color: #555;
+        float: left;
+        text-align: center;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .addBtn:hover {
+        background-color: #bbb;
+    }
+</style>
+
+<body>
+<div id="todolist" class="header">
+    <h2 style="margin:5px">iTodo List</h2>
+    <input id="new" type="text" name="newTodo">
+    <button id="add" onclick="newElement()" class="addBtn">Add</button>
+</div>
+<div id='tasks'></div>
+<button id="save" class="addBtn">Save</button>
+</body>
+
+<script>
+    showAllTasks();
+
+    $("#save").click(updateTasks);
+
+    function showAllTasks() {
+        $.get("TodoList", function (responseJson) {
+            const $ul = $("#tasks").empty();
+            $.each(responseJson, function (index, item) {
+                const $elem = $(`<div id="${item.id}">
+                    <input type='checkbox'/>
+                    <label>${item.todo}</label>
+                </div>`);
+                $ul.append($elem);
+            });
+        });
+    }
+
+    function updateTasks() {
+        var toAdd = [];
+        var toDelete = [];
+
+        $("#tasks div[name='new']").each(function (i, e) {
+            toAdd.push({
+                todo: $("label", e).text()
+            });
+        });
+
+        $("#tasks div").each(function (i, e) {
+            const $div = $(e);
+            if ($("input:checked", $div).length && $div.attr("name") !== "new") {
+                toDelete.push({
+                    id: $div.attr("id"),
+                    todo: $("label", e).text()
+                });
+            }
+        });
+
+        if (toAdd.length) {
+            $.post('TodoList', JSON.stringify(toAdd), showAllTasks);
+        }
+
+        if (toDelete.length) {
+            console.log("Delete");
+            console.log(toDelete);
+            $.ajax({
+                url: 'TodoList',
+                type: 'put',
+                contentType: 'application/json',
+                data: JSON.stringify(toDelete)
+            }).then(showAllTasks);
+        }
+    }
+
+    function newElement() {
+        var $newTodo = $("#new");
+        var $list = $("#tasks");
+        if ($newTodo.val()) {
+            const $elem = $(`<div name='new'>
+                    <input type='checkbox'/>
+                    <label>${$newTodo.val()}</label>
+                </div>`);
+            $list.append($elem);
+        }
+        $newTodo.val("");
+    }
+</script>
+</html>
