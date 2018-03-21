@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iExcel</title>
+</head>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<body>
+<div id="xltable">
+</div>
+<div id="controls">
+    <button>Add New Table</button>
+    <button>Save Table</button>
+    <button>Delete Table</button>
+</div>
+<div id="tables-select">
+    <p>Open table: </p>
+
+</div>
+
+</body>
+<script>
+
+    getTables();
+
+    $("button:contains('Add New Table')").click(function () {
+        const tableName = prompt("Enter the table name: ");
+        if (tableName) {
+            addEmptyTable(tableName);
+        }
+    });
+
+    $("button:contains('Save Table')").click(function () {
+        const value = serializeTable();
+        const table = {
+            name: $("#xltable").find("caption").text(),
+            value: value
+        };
+        $.post('Excel', JSON.stringify(table), result => showTable(result));
+    });
+
+    $("button:contains('Delete Table')").click(deleteTable);
+
+    function serializeTable() {
+        const $table = $("#xltable");
+        let _JSON = [];
+        $('tr', $table).each(function (index, tr) {
+            flag = false;
+            item = {};
+            $('td', $(this)).each(function (index, td) {
+                flag = true;
+                data = $(td).text();
+                item[index] = data;
+            });
+            if (flag) {
+                _JSON.push(item);
+            }
+        });
+        return JSON.stringify(_JSON);
+    }
+
+    function addEmptyTable(name) {
+        var div = $("#xltable");
+        var $table = $("<table></table>")
+        $table.empty();
+        var $caption = $("<caption>" + name + "</caption>");
+        var $tableTemplate = $("    <thead>\n" +
+            "    <tr>\n" +
+            "        <th></th>\n" +
+            "        <th>1\n" +
+            "            <button onclick='delCol()'>-</button>\n" +
+            "        </th>\n" +
+            "        <th>2\n" +
+            "            <button onclick='delCol()'>-</button>\n" +
+            "        </th>\n" +
+            "        <th>3\n" +
+            "            <button onclick='delCol()'>-</button>\n" +
+            "        </th>\n" +
+            "        <th>\n" +
+            "            <button onclick='addCol()'>Add Column</button>\n" +
+            "        </th>\n" +
+            "    </tr>\n" +
+            "    </thead>\n" +
+            "    <tbody>\n" +
+            "    <tr>\n" +
+            "        <th>1\n" +
+            "            <button onclick='delRow()'>-</button>\n" +
+            "        </th>\n" +
+            "        <td contenteditable='true'></td>\n" +
+            "        <td contenteditable='true'></td>p\n" +
+            "        <td contenteditable='true'></td>\n" +
+            "    </tr>\n" +
+            "    <tr>\n" +
+            "        <th>2\n" +
+            "            <button onclick='delRow()'>-</button>\n" +
+            "        </th>\n" +
+            "        <td contenteditable='true'></td>\n" +
+            "        <td contenteditable='true'></td>\n" +
+            "        <td contenteditable='true'></td>\n" +
+            "    </tr>\n" +
+            "    <tr>\n" +
+            "        <th>\n" +
+            "            <buttononclick='addRow()'>Add Row</button>\n" +
+            "        </th>\n" +
+            "    </tr>");
+        $table.append($caption);
+        $table.append($tableTemplate);
+        div.append($table);
+    }
+
+    function getTables() {
+        $.get("Excel", function (responseJson) {
+            $("#xltable").empty();
+            const $div = $("#tables-select").empty();
+            $div.append($("<p>Open Table: </p>"));
+            $.each(responseJson, function (index, item) {
+                const $elem = $(`<div id="${item.name}">
+                    <button type='text' onclick="loadTable()">${item.name}</button>
+                </div>`);
+                $div.append($elem);
+            });
+        });
+    }
+
+    function showTable(result) {
+        const name = result.name;
+        const value = JSON.parse(result.value);
+
+        const $table = $("#xltable");
+        $table.empty();
+        const $caption = $("<caption>" + name + "</caption>");
+
+        $.makeTable = function (mydata) {
+            let table = $('<table>');
+            let tblHeader = "<tr>\n" + "<th></th>";
+            for (let k in mydata[0]) {
+                tblHeader += "<th>" + k +
+                    "<button onclick='delCol()'>-</button></th>";
+            }
+            tblHeader += "<th>\n" +
+                "             <button onclick='addCol()'>Add Column</button>\n" +
+                "            </th></tr>";
+            $(tblHeader).appendTo(table);
+            $.each(mydata, function (index, value) {
+                let TableRow = "<tr>" +
+                    "<th>" + index +
+                    "            <button onclick='delRow()'>-</button>\n" +
+                    "            </th>";
+                $.each(value, function (key, val) {
+                    TableRow += "<td contenteditable='true'>" + val + "</td>";
+                });
+                TableRow += "</tr>";
+                $(table).append(TableRow);
+            });
+            let $addRow = $("<tr>\\n\" +\n" +
+                "                   <th>" +
+                "                        <button onclick='addRow()'>Add Row</button>" +
+                "                    </th>" +
+                "                </tr>");
+            $(table).append($addRow);
+            return table;
+        };
+
+        $table.append($caption);
+        let table = $.makeTable(value);
+        table.appendTo($table);
+    }
+
+    function loadTable() {
+        const name = $(event.target).text();
+        const table = {
+            name: name,
+            value: null
+        };
+        $.post('Excel', JSON.stringify(table), result => showTable(result));
+    }
+
+    function deleteTable() {
+        const name = $("caption").text();
+        const table = {
+            name: name,
+            value: null
+        };
+        $.ajax({
+            url: 'Excel',
+            type: 'put',
+            contentType: 'application/json',
+            data: JSON.stringify(table)
+        }).then(getTables);
+    }
+
+    //TODO: add functionality
+    function delCol() {
+        console.log("delCol: ", $(event.target));
+    }
+
+    function delRow() {
+        console.log("delRow: ", $(event.target));
+        $(this).closest("tr").remove();
+    }
+
+    function addCol() {
+        console.log("addCol: ", $(event.target));
+    }
+
+    function addRow() {
+        console.log("addRow: ", $(event.target));
+        var $prevTR = $(this).closest('tr').parent('tr');
+        $prevTR.appendAfter($prevTR.clone());
+    }
+</script>
+</html>
