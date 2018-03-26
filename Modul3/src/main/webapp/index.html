@@ -4,14 +4,71 @@
     <meta charset="UTF-8">
     <title>iExcel</title>
 </head>
+<style>
+    #xltable {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    caption {font-weight: bold}
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #ddd;
+    }
+
+    th {
+        padding-top: 2px;
+        padding-bottom: 2px;
+        text-align: left;
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    td, th {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    .button {
+        background-color: #4CAF50;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+    }
+
+    .loaded {
+        background-color: #8b2c82;
+        border: none;
+        color: white;
+        padding: 10px 24px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+        margin: 4px 2px;
+        cursor: pointer;
+    }
+
+</style>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <body>
 <div id="xltable">
 </div>
 <div id="controls">
-    <button>Add New Table</button>
-    <button>Save Table</button>
-    <button>Delete Table</button>
+    <button class="button">Add New Table</button>
+    <button class="button">Save Table</button>
+    <button class="button">Delete Table</button>
 </div>
 <div id="tables-select">
     <p>Open table: </p>
@@ -100,7 +157,7 @@
             "    </tr>\n" +
             "    <tr>\n" +
             "        <th>\n" +
-            "            <buttononclick='addRow()'>Add Row</button>\n" +
+            "            <button onclick='addRow()'> Add Row</button>\n" +
             "        </th>\n" +
             "    </tr>");
         $table.append($caption);
@@ -115,7 +172,7 @@
             $div.append($("<p>Open Table: </p>"));
             $.each(responseJson, function (index, item) {
                 const $elem = $(`<div id="${item.name}">
-                    <button type='text' onclick="loadTable()">${item.name}</button>
+                    <button class = 'loaded' type='text' onclick="loadTable()">${item.name}</button>
                 </div>`);
                 $div.append($elem);
             });
@@ -189,24 +246,45 @@
         }).then(getTables);
     }
 
-    //TODO: add functionality
     function delCol() {
-        console.log("delCol: ", $(event.target));
-    }
-
-    function delRow() {
-        console.log("delRow: ", $(event.target));
-        $(this).closest("tr").remove();
+        var ndx = $(event.target).parent().index() + 1;
+        $("td", event.delegateTarget).remove(":nth-child(" + ndx + ")");
+        $("thead th").remove(":nth-child(" + ndx + ")");
     }
 
     function addCol() {
-        console.log("addCol: ", $(event.target));
+        $("#xltable tr").each((i, e) => {
+            if (i === 0) {
+                $(event.target).parent().before("        <th>" + ($("thead th").length - 1) +
+                    "            <button onclick='delCol()'>-</button>" +
+                    "        </th>");
+            } else if (i !== $("#xltable tr").length - 1) {
+                $(e).append("<td contenteditable='true'></td>");
+            }
+        });
+
+
+    }
+
+    function delRow() {
+        $(event.target).closest("tr").remove();
     }
 
     function addRow() {
-        console.log("addRow: ", $(event.target));
-        var $prevTR = $(this).closest('tr').parent('tr');
-        $prevTR.appendAfter($prevTR.clone());
+        var $tr = $(event.target).closest('tr');
+        const $tHead = $("table tr");
+        const headers = $("th", $tHead[0]);
+        let row = "    <tr>" +
+            "        <th>" + $("tbody tr").length +
+            "            <button onclick='delRow()'>-</button>" +
+            "        </th>";
+
+        for (let i = 0; i < headers.length - 2; i++) {
+            row += "<td contenteditable='true'></td>";
+        }
+
+        row += "</tr>";
+        $tr.before($(row));
     }
 </script>
 </html>

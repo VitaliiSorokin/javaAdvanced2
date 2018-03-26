@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 @WebServlet(name = "Tables", urlPatterns = "/Excel")
@@ -50,7 +51,11 @@ public class ExcelServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        super.destroy();
+        try {
+            dbHelper.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
